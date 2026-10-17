@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.cache/
+
+# 训练产物与权重
+runs/
+weights/
+*.pt
+*.onnx
+*.rknn
+models/**
+!models/.gitkeep
+
+# 数据
+data/**
+!data/.gitkeep
+!data/calib/
+data/calib/**
+!data/calib/.gitkeep
+
+# 编辑器与系统
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# 交叉编译
+cpp/build/
+cpp/install/

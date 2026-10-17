@@ -1,0 +1,9 @@
+# YOLOv8 数据集配置。路径相对仓库根目录，容器内即 /workspace。
+path: data
+train: images/train
+val: images/val
+
+names:
+  0: person
+  1: vehicle
+  2: non-motor
