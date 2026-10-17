@@ -1,0 +1,19 @@
+{
+  "duration_s": 90,
+  "interval_s": 1.0,
+  "idle": false,
+  "cmd": "./cpp/mpp_multi_queue_bench yolov8n_int8.rknn bus_1080p30.h264 80 auto 4 30",
+  "n_samples": 90,
+  "cpu_util_pct": {
+    "mean": 19.72,
+    "max": 24.55
+  },
+  "temp_c": {
+    "max": 51.769,
+    "mean": 46.62
+  },
+  "power_w": {
+    "mean": null,
+    "note": "无 hwmon power*_input 时为 null，需 USB 功率计手测"
+  }
+}

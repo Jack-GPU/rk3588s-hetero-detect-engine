@@ -1,5 +1,5 @@
-// MPP 硬解(H.264) → RGA(NV12 letterbox→RGB) → RKNN fd 零拷贝推理
-// 口径：decode / rga / infer / e2e 服务时间；预热帧不计分位
+// MPP 硬解(H.264) → RGA(NV12 letterbox→RGB) → RKNN fd → CPU NMS
+// 口径：decode / rga / infer / post / e2e（含 NMS）服务时间；预热帧不计分位
 //
 // 板上：
 //   ./mpp_rga_rknn_bench model.rknn video.h264 [max_frames]
@@ -24,6 +24,7 @@
 #include "rga.h"
 #include "rk_mpi.h"
 #include "rknn_api.h"
+#include "yolov8_post.hpp"
 
 static double percentile(std::vector<double> v, double p) {
   if (v.empty()) return nan("");
@@ -131,6 +132,8 @@ int main(int argc, char** argv) {
 
   int empty_polls = 0;
   const int max_empty = 500;
+  std::vector<double> post_ms;
+  int dets_last = 0;
   while (frame_count < max_frames + warmup) {
     MppFrame frame = NULL;
     auto t0 = clock::now();
@@ -216,6 +219,15 @@ int main(int argc, char** argv) {
       return 1;
     }
 
+    float* out0 = (float*)out_mems[0]->virt_addr;
+    LetterboxMeta lb =
+        make_letterbox_meta(src_w, src_h, model_w, model_h);
+    auto dets = yolov8_postprocess(out0, 8400, 84, lb, 0.25f, 0.45f);
+    auto t5 = clock::now();
+    dets_last = (int)dets.size();
+    cls_max = 0.f;
+    for (const auto& d : dets) cls_max = std::max(cls_max, d.score);
+
     if (frame_count >= warmup) {
       decode_ms.push_back(
           std::chrono::duration<double, std::milli>(t1 - t0).count());
@@ -223,18 +235,11 @@ int main(int argc, char** argv) {
           std::chrono::duration<double, std::milli>(t3 - t2).count());
       infer_ms.push_back(
           std::chrono::duration<double, std::milli>(t4 - t3).count());
+      post_ms.push_back(
+          std::chrono::duration<double, std::milli>(t5 - t4).count());
       e2e_ms.push_back(
-          std::chrono::duration<double, std::milli>(t4 - t0).count());
+          std::chrono::duration<double, std::milli>(t5 - t0).count());
       measured++;
-    }
-
-    // cls max from last
-    float* out0 = (float*)out_mems[0]->virt_addr;
-    if (out_attrs[0].n_elems >= 84u * 8400u) {
-      cls_max = 0.f;
-      for (int a = 0; a < 8400; ++a)
-        for (int c = 4; c < 84; ++c)
-          cls_max = std::max(cls_max, out0[c * 8400 + a]);
     }
 
     int eos = mpp_frame_get_eos(frame);
@@ -250,17 +255,22 @@ int main(int argc, char** argv) {
   };
 
   std::printf("{\n");
-  std::printf("  \"pipeline\": \"MPP_H264 -> RGA_NV12_letterbox -> RKNN_fd\",\n");
-  std::printf("  \"note\": \"硬解零拷贝通路；rknn_set_io_mem 初始化绑一次\",\n");
+  std::printf(
+      "  \"pipeline\": \"MPP_H264 -> RGA_NV12_letterbox -> RKNN_fd -> "
+      "CPU_NMS\",\n");
+  std::printf(
+      "  \"note\": \"硬解零拷贝 + CPU NMS；e2e 含 post；rknn_set_io_mem "
+      "初始化绑一次\",\n");
   std::printf("  \"model_input\": \"%dx%d\",\n", model_w, model_h);
   std::printf("  \"warmup\": %d,\n", warmup);
   std::printf("  \"measured_frames\": %d,\n", measured);
   std::printf("  \"input_mem_fd\": %d,\n", input_mem->fd);
   std::printf("  \"cls_max_last\": %.4f,\n", cls_max);
+  std::printf("  \"dets_last\": %d,\n", dets_last);
   dump("decode_ms", decode_ms);
   dump("rga_preprocess_ms", rga_ms);
   dump("infer_ms", infer_ms);
-  // last field no comma
+  dump("post_ms", post_ms);
   {
     auto v = e2e_ms;
     double mean =

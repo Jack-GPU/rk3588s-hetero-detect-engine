@@ -20,6 +20,11 @@ data/**
 !data/calib/
 data/calib/**
 !data/calib/.gitkeep
+!data/coco8_val/
+!data/coco8_val/**
+datasets/
+*.pt
+yolov8n.pt
 
 # RKNN 混合量化中间文件
 models/hybrid_work/
@@ -50,3 +55,4 @@ cpp/preprocess_ab_bench
 cpp/mpp_rga_rknn_bench
 cpp/mpp_multi_queue_bench
 cpp/build/
+bench/logs/pred_int8_coco8.json

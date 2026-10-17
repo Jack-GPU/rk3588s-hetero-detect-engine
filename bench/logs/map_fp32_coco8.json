@@ -1,0 +1,7 @@
+{
+  "dataset": "coco8",
+  "backend": "ultralytics_fp32",
+  "mAP50": 0.8976041908835882,
+  "mAP50_95": 0.6302226889465508,
+  "note": "coco8 \u5c0f\u96c6 sanity\uff1b\u6b63\u5f0f\u6389\u70b9\u8bf7\u7528 eval_map_coco.py prepare --num 100"
+}

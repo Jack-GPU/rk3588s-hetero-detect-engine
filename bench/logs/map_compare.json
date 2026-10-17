@@ -1,0 +1,9 @@
+{
+  "dataset": "coco8",
+  "fp32_mAP50": 0.8976041908835882,
+  "fp32_mAP50_95": 0.6302226889465508,
+  "int8_mAP50": 0.8078555925090579,
+  "int8_mAP50_95": 0.5186630862373436,
+  "mAP50_drop": 0.0897,
+  "note": "coco8 仅 4 张 val，作 sanity；正式请用 eval_map_coco prepare --num 100"
+}

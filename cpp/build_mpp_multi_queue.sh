@@ -2,7 +2,8 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="${ROOT}/cpp/mpp_multi_queue_bench"
-g++ -O2 -std=c++17 \
+g++ -O3 -std=c++17 \
+  -I"${ROOT}/cpp/src" \
   -I"${ROOT}/third_party/rknn/include" \
   -I"${ROOT}/third_party/librga/include" \
   -I"${ROOT}/third_party/mpp/include" \

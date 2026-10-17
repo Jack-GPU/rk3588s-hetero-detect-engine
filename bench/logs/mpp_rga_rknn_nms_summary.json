@@ -1,0 +1,35 @@
+{
+  "pipeline": "MPP_H264 -> RGA_NV12_letterbox -> RKNN_fd -> CPU_NMS",
+  "note": "硬解零拷贝 + CPU NMS；e2e 含 post；rknn_set_io_mem 初始化绑一次",
+  "model_input": "640x640",
+  "warmup": 20,
+  "measured_frames": 120,
+  "input_mem_fd": 13,
+  "cls_max_last": 0.8638,
+  "dets_last": 6,
+  "decode_ms": {
+    "p50": 0.367,
+    "p99": 1.027,
+    "mean": 0.398
+  },
+  "rga_preprocess_ms": {
+    "p50": 1.999,
+    "p99": 2.518,
+    "mean": 2.06
+  },
+  "infer_ms": {
+    "p50": 26.267,
+    "p99": 43.676,
+    "mean": 29.169
+  },
+  "post_ms": {
+    "p50": 2.775,
+    "p99": 8.428,
+    "mean": 2.941
+  },
+  "e2e_ms": {
+    "p50": 31.396,
+    "p99": 55.425,
+    "mean": 34.572
+  }
+}

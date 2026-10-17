@@ -105,27 +105,33 @@ P50 约 **4.8×**。详见 [`docs/预处理对照.md`](docs/预处理对照.md) 
 
 本组负载下 AUTO 优于静态；按实测写。详见 [`docs/调度对照.md`](docs/调度对照.md)。
 
-## 硬解零拷贝 MPP→RGA→RKNN（阶段 4 单路，已测）
+## 硬解零拷贝 MPP→RGA→RKNN→NMS（阶段 4 单路，已测）
 
-路径：`MPP H.264 → RGA NV12 letterbox → RKNN dma-buf fd`（不含 CPU NMS）。
+路径：`MPP H.264 → RGA NV12 letterbox → RKNN dma-buf fd → CPU NMS`（与软解同口径）。
 
 | 指标 | 软解基线 e2e | 硬解 e2e |
 | --- | ---: | ---: |
-| P50 | 61.1 ms | **27.8 ms** |
-| P99 | 124.7 ms | **28.5 ms** |
+| P50 | 61.1 ms | **31.4 ms**（~1.9×） |
+| P99 | 124.7 ms | **55.4 ms**（~2.3×） |
 
-硬解分段 P50：decode 0.34 / RGA 1.86 / infer 25.6 ms。软解 e2e 含 NMS；对齐后 decode+pre+infer 约 2.0×。详见 [`docs/硬解零拷贝.md`](docs/硬解零拷贝.md) 与 [`bench/logs/mpp_rga_rknn_summary.json`](bench/logs/mpp_rga_rknn_summary.json)。
+post(NMS) P50 **2.8 ms**。详见 [`docs/硬解零拷贝.md`](docs/硬解零拷贝.md)。
 
 ## 四路队列 + 丢旧帧（已测）
 
-4 × 1080p @ 30 fps 限速输入，`depth=1` 丢旧帧，含 MPP + RGA + RKNN：
+4 × 1080p @ 30 fps，`depth=1` 丢旧帧，含 MPP + RGA + RKNN + NMS：
 
 | 策略 | T_fps | 丢帧率 | e2e P99 |
 | --- | ---: | ---: | ---: |
-| 单核争用 | 46.2 | 68.3% | 128.2 ms |
-| 静态绑核 0/1/2/0 | **56.5** | 32.6% | 78.1 ms |
-| `NPU_CORE_AUTO` | 55.2 | **26.8%** | **69.5 ms** |
+| `NPU_CORE_AUTO` + NMS | **54.4** | **15.5%** | **72.7 ms** |
 
-需求 120 fps，完成约 55 fps——靠丢旧帧把 AUTO 的 e2e P99 压在 ~70 ms。详见 [`docs/多路队列对照.md`](docs/多路队列对照.md)。
+需求 120 fps，完成约 54 fps；靠丢旧帧保 P99。详见 [`docs/多路队列对照.md`](docs/多路队列对照.md)。
 
-下一步：硬通路补 NMS、功耗/热稳定长测、INT8 mAP。
+## 精度与功耗（已测）
+
+| 项 | 结果 |
+| --- | --- |
+| coco8 mAP50 掉点（FP32→INT8） | **0.090**（4 张 sanity，非正式） |
+| 四路 90 s CPU / 温度 | 均值 **19.7%** / **46.6 °C**（max 51.8 °C） |
+| 整板瓦数 | 板无功率节点，待 USB 功率计 |
+
+详见 [`docs/精度与功耗.md`](docs/精度与功耗.md)。

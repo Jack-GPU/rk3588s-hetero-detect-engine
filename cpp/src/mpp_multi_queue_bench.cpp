@@ -33,6 +33,7 @@
 #include "rga.h"
 #include "rk_mpi.h"
 #include "rknn_api.h"
+#include "yolov8_post.hpp"
 
 static double percentile(std::vector<double> v, double p) {
   if (v.empty()) return nan("");
@@ -128,9 +129,11 @@ struct StreamCtx {
   std::vector<double> infer_ms;
   std::vector<double> e2e_ms;
   std::vector<double> rga_ms;
+  std::vector<double> post_ms;
   std::mutex stats_mu;
   std::atomic<int> inferred{0};
   float cls_max = 0.f;
+  int dets_last = 0;
 };
 
 static std::mutex g_rga_mu;  // improcess 跨流串行，避免驱动竞态
@@ -315,15 +318,29 @@ static void infer_worker(StreamCtx* s, int warmup, int measure_target,
       continue;
     }
 
+    int src_w = (int)mpp_frame_get_width(qf.frame);
+    int src_h = (int)mpp_frame_get_height(qf.frame);
+
     auto t_inf0 = SteadyClock::now();
     int ret = rknn_run(s->rknn, nullptr);
     auto t_inf1 = SteadyClock::now();
+
+    float* out0 =
+        s->out_mems.empty() ? nullptr : (float*)s->out_mems[0]->virt_addr;
+    LetterboxMeta lb =
+        make_letterbox_meta(src_w, src_h, s->model_w, s->model_h);
+    auto dets = yolov8_postprocess(out0, 8400, 84, lb, 0.25f, 0.45f);
+    auto t_post1 = SteadyClock::now();
     mpp_frame_deinit(&qf.frame);
 
     if (ret != 0) {
       std::fprintf(stderr, "stream%d rknn_run %d\n", s->id, ret);
       continue;
     }
+
+    s->dets_last = (int)dets.size();
+    s->cls_max = 0.f;
+    for (const auto& d : dets) s->cls_max = std::max(s->cls_max, d.score);
 
     seen++;
     if (seen == warmup && !signaled_warmup) {
@@ -336,23 +353,18 @@ static void infer_worker(StreamCtx* s, int warmup, int measure_target,
           std::chrono::duration<double, std::milli>(t_inf1 - t_inf0).count();
       double rga =
           std::chrono::duration<double, std::milli>(t_rga1 - t_rga0).count();
+      double post =
+          std::chrono::duration<double, std::milli>(t_post1 - t_inf1).count();
       double e2e =
-          std::chrono::duration<double, std::milli>(t_inf1 - qf.t_enq).count();
+          std::chrono::duration<double, std::milli>(t_post1 - qf.t_enq).count();
       {
         std::lock_guard<std::mutex> lk(s->stats_mu);
         s->infer_ms.push_back(infer);
         s->rga_ms.push_back(rga);
+        s->post_ms.push_back(post);
         s->e2e_ms.push_back(e2e);
       }
       s->inferred.fetch_add(1);
-    }
-
-    if (!s->out_mems.empty() && s->out_attrs[0].n_elems >= 84u * 8400u) {
-      float* out0 = (float*)s->out_mems[0]->virt_addr;
-      float mx = 0.f;
-      for (int a = 0; a < 8400; ++a)
-        for (int c = 4; c < 84; ++c) mx = std::max(mx, out0[c * 8400 + a]);
-      s->cls_max = mx;
     }
   }
   if (!signaled_warmup) warmup_done->fetch_add(1);
@@ -445,7 +457,7 @@ int main(int argc, char** argv) {
       std::chrono::duration<double>(t_wall1 - t_wall0).count();
 
   uint64_t total_infer = 0, total_drop = 0, total_push = 0;
-  std::vector<double> all_infer, all_e2e, all_rga;
+  std::vector<double> all_infer, all_e2e, all_rga, all_post;
   for (auto& s : streams) {
     total_infer += s.inferred.load();
     total_drop += s.q.drops;
@@ -454,6 +466,7 @@ int main(int argc, char** argv) {
     all_infer.insert(all_infer.end(), s.infer_ms.begin(), s.infer_ms.end());
     all_e2e.insert(all_e2e.end(), s.e2e_ms.begin(), s.e2e_ms.end());
     all_rga.insert(all_rga.end(), s.rga_ms.begin(), s.rga_ms.end());
+    all_post.insert(all_post.end(), s.post_ms.begin(), s.post_ms.end());
   }
   double drop_rate =
       (total_infer + total_drop) > 0
@@ -478,7 +491,7 @@ int main(int argc, char** argv) {
 
   std::printf("{\n");
   std::printf("  \"pipeline\": \"4x MPP_H264 -> queue(depth=1 drop-old) -> "
-              "RGA -> RKNN_fd\",\n");
+              "RGA -> RKNN_fd -> CPU_NMS\",\n");
   std::printf("  \"mode\": \"%s\",\n", mode.c_str());
   std::printf("  \"num_streams\": %d,\n", num_streams);
   std::printf("  \"input_fps\": %.1f,\n", input_fps);
@@ -498,9 +511,12 @@ int main(int argc, char** argv) {
   std::printf("  \"drop_rate\": %.4f,\n", drop_rate);
   std::printf("  \"T_fps\": %.2f,\n", T_fps);
   std::printf("  \"cls_max_last_stream0\": %.4f,\n", streams[0].cls_max);
+  std::printf("  \"dets_last_stream0\": %d,\n", streams[0].dets_last);
   dump("infer_ms_all", all_infer);
   std::printf(",\n");
   dump("rga_ms_all", all_rga);
+  std::printf(",\n");
+  dump("post_ms_all", all_post);
   std::printf(",\n");
   dump("e2e_ms_all", all_e2e);
   std::printf(",\n");
