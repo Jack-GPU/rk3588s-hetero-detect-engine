@@ -1,35 +1,69 @@
 # RK3588S 端侧多路视频实时结构化系统
 
-在 RK3588S 上跑通 4 路 1080p 实时检测：MPP 硬解 → RGA 缩放/色域转换 → RKNN 推理 → DRM 显示，全链路用 DMA-BUF 传 fd，CPU 不碰像素。
+在 RK3588S 上跑通多路 1080p 实时检测：MPP 硬解 → RGA 缩放/色域转换 → RKNN 推理，全链路用 DMA-BUF 传 fd，CPU 不碰像素。
 
-验收线：端到端 P99 ≤ 120 ms，8 核平均 CPU ≤ 45%，整板功耗 ≤ 10 W，连续 2 小时不降频。
-
-阶段和训练边界见 [docs/实施计划.md](docs/实施计划.md)。
+计划中的验收线（有实测再写进简历）：端到端 P99、CPU、整板功耗、热稳定。阶段划分见 [docs/实施计划.md](docs/实施计划.md)。算法上手（预训练 → ONNX → 混合 INT8 RKNN → 板上出框）见 [docs/算法上手.md](docs/算法上手.md)。
 
 ## 目录
 
 ```
 ├── docker/          PC 端开发容器（训练、导出 ONNX、转 RKNN）
-├── python/          训练、导出、量化脚本
-├── cpp/             板端流水线（MPP / RGA / RKNN / DRM）
+├── python/          导出、校准、混合量化、板上推理脚本
+├── cpp/             板端流水线骨架（MPP / RGA / RKNN / DRM）
 ├── configs/         数据集与类别配置
-├── data/            数据集与校准图（不入库）
-├── models/          权重与 .rknn（不入库）
-├── scripts/         进容器、环境自检
-└── docs/            实施计划与后续测量记录
+├── assets/          小样例图（可入库）
+├── data/            校准图与数据集（本地生成，不入库）
+├── models/          权重与 .rknn（本地生成，不入库）
+├── scripts/         进容器
+└── docs/            实施计划与算法上手
 ```
 
-板端运行时（`rknnrt`、MPP、RGA）装在 RK3588S 上，不装进这个 x86 镜像。PC 镜像里的 RKNN Toolkit2 只负责转换和仿真，版本必须和板子上的 Runtime 一致，当前锁定 **2.3.2**。
+板端 Runtime（`librknnrt`）与 PC 上 RKNN Toolkit2 版本必须一致，本仓库锁定 **2.3.2**。
 
-## 开发环境
+## 快速开始（PC）
 
-这台机器上已经有可用镜像，2026-10-17 复核通过，不需要重新构建：
-
-本项目使用镜像 `rk3588s-video-struct:2.3.2`，容器名 `rk3588s-video-struct`。里面是 Toolkit2 2.3.2、PyTorch 2.1.2+cu121、Ultralytics、ONNX 1.15.0、`aarch64-linux-gnu-gcc` 11.4。
-
-新机器只需先装好并启动 Docker Engine。没有该镜像时，`./scripts/dev.sh` 会用 `docker/Dockerfile` 构建 `rk3588s-video-struct:2.3.2`（首次约 10–20 分钟，需要能访问 `download.pytorch.org` 和 PyPI）。检测到 NVIDIA Container Runtime 时自动加上 GPU；没有则用 CPU，RKNN 转换仍然可用。
+需要 Docker。没有镜像时，`./scripts/dev.sh` 会构建 `rk3588s-video-struct:2.3.2`（含 Toolkit2 2.3.2、PyTorch、Ultralytics）。有 NVIDIA Container Runtime 时自动加 GPU。
 
 ```bash
-./scripts/dev.sh          # 进入容器，仓库挂到 /workspace
-./scripts/dev.sh python python/check_env.py
+./scripts/dev.sh                              # 进入容器，仓库挂到 /workspace
+./scripts/dev.sh python python/check_env.py   # 环境自检
 ```
+
+算法链路（容器内）：
+
+```bash
+# 1) 预训练权重 + 导出 ONNX
+yolo predict model=yolov8n.pt source=assets/bus.jpg imgsz=640
+python python/export_onnx.py --weights models/yolov8n.pt --out models/yolov8n.onnx
+
+# 2) 校准集（学习用 30 张；正式基线用 COCO 300 张）
+python python/prepare_calib.py --out data/calib --num 30
+# 或：python python/prepare_coco_calib.py --out data/calib/coco_val300 --num 300
+
+# 3) 混合 INT8（检测输出层保持 FP16，避免类别分数被量化成 0）
+python python/convert_rknn.py \
+  --onnx models/yolov8n.onnx \
+  --dataset data/calib/dataset.txt \
+  --out models/yolov8n_int8.rknn \
+  --simulate assets/bus.jpg
+```
+
+## 板上验证
+
+1. 板端 `librknnrt` 升到 **2.3.2**（与 Toolkit2 对齐）。
+2. 安装 `rknn_toolkit_lite2==2.3.2`、`numpy`、`opencv-python-headless`（板子无外网时在 PC 下 wheel 再拷过去）。
+3. 拷贝模型与脚本后推理：
+
+```bash
+scp models/yolov8n_int8.rknn python/board_infer_yolov8.py assets/bus.jpg root@板子IP:~/
+ssh root@板子IP
+python3 board_infer_yolov8.py \
+  --model ~/yolov8n_int8.rknn \
+  --image ~/bus.jpg \
+  --out ~/bus_det.jpg
+```
+
+## 说明
+
+- **不要用全 INT8 直接量化** Ultralytics 导出的 YOLOv8 单输出 ONNX：框坐标与类别分数量纲差两个数量级，类别会被压成 0。请走 `python/convert_rknn.py` 的混合量化。
+- 权重、ONNX、RKNN、校准图体积大，已在 `.gitignore` 中排除；克隆后按文档本地生成即可。

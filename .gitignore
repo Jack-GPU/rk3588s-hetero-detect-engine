@@ -5,7 +5,7 @@ __pycache__/
 *.egg-info/
 .cache/
 
-# 训练产物与权重
+# 训练产物与权重（本地生成，不入库）
 runs/
 weights/
 *.pt
@@ -14,12 +14,17 @@ weights/
 models/**
 !models/.gitkeep
 
-# 数据
+# 校准图与数据集（本地下载，不入库）
 data/**
 !data/.gitkeep
 !data/calib/
 data/calib/**
 !data/calib/.gitkeep
+
+# RKNN 混合量化中间文件
+models/hybrid_work/
+check*_*.onnx
+rknn_upgrade/
 
 # 编辑器与系统
 .idea/
