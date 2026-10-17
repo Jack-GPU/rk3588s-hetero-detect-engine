@@ -1,0 +1,242 @@
+{
+  "auto": {
+    "pipeline": "4x MPP_H264 -> queue(depth=1 drop-old) -> RGA -> RKNN_fd",
+    "mode": "auto",
+    "num_streams": 4,
+    "input_fps": 30.0,
+    "queue_depth": 1,
+    "drop_policy": "drop_old",
+    "core_masks": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "warmup_per_stream": 15,
+    "frames_per_stream_target": 60,
+    "wall_s": 4.347,
+    "total_inferred": 240,
+    "total_pushed": 600,
+    "total_drops": 88,
+    "drop_rate": 0.2683,
+    "T_fps": 55.21,
+    "cls_max_last_stream0": 0.854,
+    "infer_ms_all": {
+      "p50": 29.625,
+      "p99": 40.804,
+      "mean": 30.471
+    },
+    "rga_ms_all": {
+      "p50": 1.914,
+      "p99": 4.617,
+      "mean": 2.152
+    },
+    "e2e_ms_all": {
+      "p50": 48.629,
+      "p99": 69.472,
+      "mean": 48.41
+    },
+    "per_stream": [
+      {
+        "id": 0,
+        "mask": 0,
+        "inferred": 60,
+        "drops": 23,
+        "infer_p50": 29.01,
+        "infer_p99": 41.332,
+        "e2e_p50": 50.456,
+        "e2e_p99": 70.375
+      },
+      {
+        "id": 1,
+        "mask": 0,
+        "inferred": 60,
+        "drops": 22,
+        "infer_p50": 28.962,
+        "infer_p99": 40.899,
+        "e2e_p50": 48.286,
+        "e2e_p99": 68.163
+      },
+      {
+        "id": 2,
+        "mask": 0,
+        "inferred": 60,
+        "drops": 16,
+        "infer_p50": 30.169,
+        "infer_p99": 36.819,
+        "e2e_p50": 45.853,
+        "e2e_p99": 66.906
+      },
+      {
+        "id": 3,
+        "mask": 0,
+        "inferred": 60,
+        "drops": 27,
+        "infer_p50": 30.931,
+        "infer_p99": 40.554,
+        "e2e_p50": 49.326,
+        "e2e_p99": 69.677
+      }
+    ]
+  },
+  "static": {
+    "pipeline": "4x MPP_H264 -> queue(depth=1 drop-old) -> RGA -> RKNN_fd",
+    "mode": "static",
+    "num_streams": 4,
+    "input_fps": 30.0,
+    "queue_depth": 1,
+    "drop_policy": "drop_old",
+    "core_masks": [
+      1,
+      2,
+      4,
+      1
+    ],
+    "warmup_per_stream": 15,
+    "frames_per_stream_target": 60,
+    "wall_s": 4.245,
+    "total_inferred": 240,
+    "total_pushed": 600,
+    "total_drops": 116,
+    "drop_rate": 0.3258,
+    "T_fps": 56.53,
+    "cls_max_last_stream0": 0.854,
+    "infer_ms_all": {
+      "p50": 31.585,
+      "p99": 48.319,
+      "mean": 33.425
+    },
+    "rga_ms_all": {
+      "p50": 1.907,
+      "p99": 3.878,
+      "mean": 2.09
+    },
+    "e2e_ms_all": {
+      "p50": 52.414,
+      "p99": 78.122,
+      "mean": 52.672
+    },
+    "per_stream": [
+      {
+        "id": 0,
+        "mask": 1,
+        "inferred": 60,
+        "drops": 43,
+        "infer_p50": 37.774,
+        "infer_p99": 48.538,
+        "e2e_p50": 58.722,
+        "e2e_p99": 79.695
+      },
+      {
+        "id": 1,
+        "mask": 2,
+        "inferred": 60,
+        "drops": 13,
+        "infer_p50": 28.39,
+        "infer_p99": 36.117,
+        "e2e_p50": 46.493,
+        "e2e_p99": 63.265
+      },
+      {
+        "id": 2,
+        "mask": 4,
+        "inferred": 60,
+        "drops": 14,
+        "infer_p50": 28.667,
+        "infer_p99": 34.867,
+        "e2e_p50": 50.152,
+        "e2e_p99": 64.551
+      },
+      {
+        "id": 3,
+        "mask": 1,
+        "inferred": 60,
+        "drops": 46,
+        "infer_p50": 38.335,
+        "infer_p99": 48.639,
+        "e2e_p50": 55.898,
+        "e2e_p99": 81.236
+      }
+    ]
+  },
+  "serial": {
+    "pipeline": "4x MPP_H264 -> queue(depth=1 drop-old) -> RGA -> RKNN_fd",
+    "mode": "serial",
+    "num_streams": 4,
+    "input_fps": 30.0,
+    "queue_depth": 1,
+    "drop_policy": "drop_old",
+    "core_masks": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "warmup_per_stream": 15,
+    "frames_per_stream_target": 60,
+    "wall_s": 3.704,
+    "total_inferred": 171,
+    "total_pushed": 600,
+    "total_drops": 369,
+    "drop_rate": 0.6833,
+    "T_fps": 46.17,
+    "cls_max_last_stream0": 0.854,
+    "infer_ms_all": {
+      "p50": 77.468,
+      "p99": 94.109,
+      "mean": 78.426
+    },
+    "rga_ms_all": {
+      "p50": 1.973,
+      "p99": 3.829,
+      "mean": 2.124
+    },
+    "e2e_ms_all": {
+      "p50": 98.407,
+      "p99": 128.218,
+      "mean": 98.028
+    },
+    "per_stream": [
+      {
+        "id": 0,
+        "mask": 1,
+        "inferred": 44,
+        "drops": 91,
+        "infer_p50": 76.739,
+        "infer_p99": 94.64,
+        "e2e_p50": 97.551,
+        "e2e_p99": 120.397
+      },
+      {
+        "id": 1,
+        "mask": 1,
+        "inferred": 43,
+        "drops": 92,
+        "infer_p50": 77.884,
+        "infer_p99": 93.189,
+        "e2e_p50": 97.554,
+        "e2e_p99": 133.741
+      },
+      {
+        "id": 2,
+        "mask": 1,
+        "inferred": 42,
+        "drops": 93,
+        "infer_p50": 78.413,
+        "infer_p99": 91.514,
+        "e2e_p50": 99.858,
+        "e2e_p99": 133.005
+      },
+      {
+        "id": 3,
+        "mask": 1,
+        "inferred": 42,
+        "drops": 93,
+        "infer_p50": 77.259,
+        "infer_p99": 98.131,
+        "e2e_p50": 99.14,
+        "e2e_p99": 114.258
+      }
+    ]
+  }
+}

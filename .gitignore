@@ -48,4 +48,5 @@ third_party/mpp/bin/
 third_party/mpp-src/
 cpp/preprocess_ab_bench
 cpp/mpp_rga_rknn_bench
+cpp/mpp_multi_queue_bench
 cpp/build/

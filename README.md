@@ -116,4 +116,16 @@ P50 约 **4.8×**。详见 [`docs/预处理对照.md`](docs/预处理对照.md) 
 
 硬解分段 P50：decode 0.34 / RGA 1.86 / infer 25.6 ms。软解 e2e 含 NMS；对齐后 decode+pre+infer 约 2.0×。详见 [`docs/硬解零拷贝.md`](docs/硬解零拷贝.md) 与 [`bench/logs/mpp_rga_rknn_summary.json`](bench/logs/mpp_rga_rknn_summary.json)。
 
-下一步：四路 MPP 并发 + 有界队列/丢帧，补功耗与热稳定长测。
+## 四路队列 + 丢旧帧（已测）
+
+4 × 1080p @ 30 fps 限速输入，`depth=1` 丢旧帧，含 MPP + RGA + RKNN：
+
+| 策略 | T_fps | 丢帧率 | e2e P99 |
+| --- | ---: | ---: | ---: |
+| 单核争用 | 46.2 | 68.3% | 128.2 ms |
+| 静态绑核 0/1/2/0 | **56.5** | 32.6% | 78.1 ms |
+| `NPU_CORE_AUTO` | 55.2 | **26.8%** | **69.5 ms** |
+
+需求 120 fps，完成约 55 fps——靠丢旧帧把 AUTO 的 e2e P99 压在 ~70 ms。详见 [`docs/多路队列对照.md`](docs/多路队列对照.md)。
+
+下一步：硬通路补 NMS、功耗/热稳定长测、INT8 mAP。
