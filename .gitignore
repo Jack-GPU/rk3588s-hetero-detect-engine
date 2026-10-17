@@ -40,8 +40,12 @@ cpp/install/
 assets/*.mp4
 bench/logs/*.jsonl
 
-# 第三方二进制（用 scripts/fetch_third_party.sh 拉取）
+# 第三方二进制（用 scripts/fetch_third_party.sh 拉取；MPP 需交叉编译）
 third_party/librga/lib/
 third_party/stb_image.h
+third_party/mpp/lib/
+third_party/mpp/bin/
+third_party/mpp-src/
 cpp/preprocess_ab_bench
+cpp/mpp_rga_rknn_bench
 cpp/build/

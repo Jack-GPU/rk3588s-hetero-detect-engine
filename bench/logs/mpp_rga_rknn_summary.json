@@ -1,0 +1,37 @@
+{
+  "pipeline": "MPP_H264 -> RGA_NV12_letterbox -> RKNN_fd",
+  "note": "硬解零拷贝通路；rknn_set_io_mem 初始化绑一次。e2e = decode + RGA + infer，不含 CPU NMS。板型 Orange Pi 5 / RK3588S，Runtime 2.3.2，混合 INT8 YOLOv8n。",
+  "model": "yolov8n_int8.rknn",
+  "video": "bus_1080p30.h264",
+  "resolution": "1920x1080",
+  "warmup_frames": 20,
+  "measured_frames": 120,
+  "cls_max_last": 0.8638,
+  "decode_ms": {
+    "p50": 0.341,
+    "p99": 0.355,
+    "mean": 0.342
+  },
+  "rga_preprocess_ms": {
+    "p50": 1.863,
+    "p99": 1.904,
+    "mean": 1.866
+  },
+  "infer_ms": {
+    "p50": 25.596,
+    "p99": 26.289,
+    "mean": 25.657
+  },
+  "e2e_ms": {
+    "p50": 27.809,
+    "p99": 28.507,
+    "mean": 27.867
+  },
+  "vs_soft_baseline": {
+    "soft_e2e_ms": {"p50": 61.14, "p99": 124.65, "includes_cpu_nms": true},
+    "soft_post_ms_p50": 5.52,
+    "e2e_p50_speedup_raw": 2.2,
+    "e2e_p99_speedup_raw": 4.37,
+    "note": "软解基线 e2e 含 CPU NMS；硬解本表 e2e 不含。去掉软解 post_ms 后 decode+pre+infer 约 55.6 ms → 相对本表约 2.0×。"
+  }
+}

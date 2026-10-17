@@ -105,4 +105,15 @@ P50 约 **4.8×**。详见 [`docs/预处理对照.md`](docs/预处理对照.md) 
 
 本组负载下 AUTO 优于静态；按实测写。详见 [`docs/调度对照.md`](docs/调度对照.md)。
 
-下一步：MPP 硬解接 NV12→RGA→fd，补齐端到端零拷贝。
+## 硬解零拷贝 MPP→RGA→RKNN（阶段 4 单路，已测）
+
+路径：`MPP H.264 → RGA NV12 letterbox → RKNN dma-buf fd`（不含 CPU NMS）。
+
+| 指标 | 软解基线 e2e | 硬解 e2e |
+| --- | ---: | ---: |
+| P50 | 61.1 ms | **27.8 ms** |
+| P99 | 124.7 ms | **28.5 ms** |
+
+硬解分段 P50：decode 0.34 / RGA 1.86 / infer 25.6 ms。软解 e2e 含 NMS；对齐后 decode+pre+infer 约 2.0×。详见 [`docs/硬解零拷贝.md`](docs/硬解零拷贝.md) 与 [`bench/logs/mpp_rga_rknn_summary.json`](bench/logs/mpp_rga_rknn_summary.json)。
+
+下一步：四路 MPP 并发 + 有界队列/丢帧，补功耗与热稳定长测。
