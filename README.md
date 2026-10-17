@@ -63,7 +63,23 @@ python3 board_infer_yolov8.py \
   --out ~/bus_det.jpg
 ```
 
+## 单路视频基线（阶段 1，已测）
+
+路径：`OpenCV 软解 → CPU letterbox → RKNN 混合 INT8 → CPU NMS`（**尚非** MPP/RGA/dma-buf）。
+
+| 指标 | 实测 |
+| --- | --- |
+| 分辨率 | 1 × 1080p |
+| 样本 | 270 帧（预热 30） |
+| 推理 P50 / P99 | 35.6 / 51.6 ms |
+| 端到端 P50 / P99 | 61.1 / 124.7 ms |
+| 预处理 P50 | 9.9 ms |
+| CPU 平均 | ~14.6%（mpstat，采样窗内） |
+
+原始摘要：[`bench/logs/single_stream_summary.json`](bench/logs/single_stream_summary.json)。复现见 [`docs/单路基线.md`](docs/单路基线.md)。
+
 ## 说明
 
 - **不要用全 INT8 直接量化** Ultralytics 导出的 YOLOv8 单输出 ONNX：框坐标与类别分数量纲差两个数量级，类别会被压成 0。请走 `python/convert_rknn.py` 的混合量化。
-- 权重、ONNX、RKNN、校准图体积大，已在 `.gitignore` 中排除；克隆后按文档本地生成即可。
+- 权重、ONNX、RKNN、校准图、测试 mp4 体积大，已在 `.gitignore` 中排除；克隆后按文档本地生成即可。
+- 下一步：RGA + `rknn_create_mem_from_fd` 做预处理对照（A/B），再谈四路与三核调度。

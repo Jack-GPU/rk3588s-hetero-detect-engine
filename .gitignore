@@ -35,3 +35,7 @@ rknn_upgrade/
 # 交叉编译
 cpp/build/
 cpp/install/
+
+# 大型测试视频（本地/板上生成）
+assets/*.mp4
+bench/logs/*.jsonl

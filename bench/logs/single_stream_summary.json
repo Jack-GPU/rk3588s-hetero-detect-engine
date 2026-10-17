@@ -1,0 +1,33 @@
+{
+  "pipeline": "opencv_decode + cpu_letterbox + rknn + cpu_nms",
+  "note": "阶段1基线；非 MPP/RGA/dma-buf。板型 Orange Pi 5 / RK3588S，Runtime 2.3.2，混合 INT8 YOLOv8n。",
+  "model": "yolov8n_int8.rknn",
+  "video": "bus_1080p30.mp4",
+  "warmup_frames": 30,
+  "measured_frames": 270,
+  "resolution": "1920x1080",
+  "infer_ms": {
+    "p50": 35.64,
+    "p99": 51.65,
+    "mean": 37.18
+  },
+  "e2e_ms": {
+    "p50": 61.14,
+    "p99": 124.65,
+    "mean": 65.76
+  },
+  "preprocess_ms": {
+    "p50": 9.88,
+    "p99": 17.64,
+    "mean": 10.43
+  },
+  "decode_ms": {
+    "p50": 9.25,
+    "mean": 10.81
+  },
+  "post_ms": {
+    "p50": 5.52,
+    "mean": 7.15
+  },
+  "cpu_util_avg_pct": 14.62
+}
