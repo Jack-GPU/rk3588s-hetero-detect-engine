@@ -1,0 +1,38 @@
+{
+  "title": "NPU 3-core schedule compare (4 concurrent contexts)",
+  "note": "同输入 tensor；仅计 inference；队列/丢帧未启用。AUTO 在本组负载下优于静态绑核，按实测填写，不预设谁更好。",
+  "board": "Orange Pi 5 / RK3588S",
+  "runtime": "2.3.2",
+  "model": "yolov8n_int8.rknn",
+  "input": "1920x1080 letterbox->640",
+  "frames_per_stream": 120,
+  "warmup_per_stream": 15,
+  "strategies": [
+    {
+      "strategy": "serial_core0",
+      "masks": [1, 1, 1, 1],
+      "infer_ms": { "p50": 89.05, "p99": 114.65, "mean": 90.00 },
+      "T_fps": 39.4
+    },
+    {
+      "strategy": "static_mask",
+      "masks": [1, 2, 4, 1],
+      "infer_ms": { "p50": 41.40, "p99": 63.96, "mean": 40.63 },
+      "T_fps": 74.5
+    },
+    {
+      "strategy": "auto",
+      "masks": [0, 0, 0, 0],
+      "infer_ms": { "p50": 35.08, "p99": 51.42, "mean": 36.00 },
+      "T_fps": 87.7
+    }
+  ],
+  "resume_symbols": {
+    "C_static_infer_p99_ms": 63.96,
+    "D_auto_infer_p99_ms": 51.42,
+    "T_static_fps": 74.5,
+    "T_auto_fps": 87.7,
+    "T_serial_fps": 39.4,
+    "serial_infer_p99_ms": 114.65
+  }
+}

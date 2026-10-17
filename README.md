@@ -93,4 +93,16 @@ python3 board_infer_yolov8.py \
 
 P50 约 **4.8×**。详见 [`docs/预处理对照.md`](docs/预处理对照.md) 与 [`bench/logs/preprocess_ab_summary.json`](bench/logs/preprocess_ab_summary.json)。
 
-下一步：MPP 硬解 + NV12→RGA 合成，以及三核调度对照。
+## 三核调度对照（已测）
+
+4 路并发推理、同输入，仅计 `inference`：
+
+| 策略 | 推理 P99 | 合计吞吐 T |
+| --- | ---: | ---: |
+| 单核争用 `CORE_0` | 114.7 ms | 39.4 fps |
+| 静态绑核 0/1/2/0 | **64.0 ms**（C） | 74.5 fps |
+| `NPU_CORE_AUTO` | **51.4 ms**（D） | **87.7 fps** |
+
+本组负载下 AUTO 优于静态；按实测写。详见 [`docs/调度对照.md`](docs/调度对照.md)。
+
+下一步：MPP 硬解接 NV12→RGA→fd，补齐端到端零拷贝。
