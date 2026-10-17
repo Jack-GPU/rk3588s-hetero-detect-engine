@@ -39,3 +39,9 @@ cpp/install/
 # 大型测试视频（本地/板上生成）
 assets/*.mp4
 bench/logs/*.jsonl
+
+# 第三方二进制（用 scripts/fetch_third_party.sh 拉取）
+third_party/librga/lib/
+third_party/stb_image.h
+cpp/preprocess_ab_bench
+cpp/build/

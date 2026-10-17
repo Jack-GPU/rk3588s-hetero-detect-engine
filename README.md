@@ -82,4 +82,15 @@ python3 board_infer_yolov8.py \
 
 - **不要用全 INT8 直接量化** Ultralytics 导出的 YOLOv8 单输出 ONNX：框坐标与类别分数量纲差两个数量级，类别会被压成 0。请走 `python/convert_rknn.py` 的混合量化。
 - 权重、ONNX、RKNN、校准图、测试 mp4 体积大，已在 `.gitignore` 中排除；克隆后按文档本地生成即可。
-- 下一步：RGA + `rknn_create_mem_from_fd` 做预处理对照（A/B），再谈四路与三核调度。
+## 预处理对照 A/B（已测）
+
+同进程、1080p→640 letterbox，服务时间：
+
+| 路径 | preprocess P50 | preprocess P99 |
+| --- | ---: | ---: |
+| A CPU letterbox + memcpy | 25.5 ms | 26.0 ms |
+| B RGA 写入 `rknn_create_mem` 的 dma-buf fd | **5.3 ms** | 9.4 ms |
+
+P50 约 **4.8×**。详见 [`docs/预处理对照.md`](docs/预处理对照.md) 与 [`bench/logs/preprocess_ab_summary.json`](bench/logs/preprocess_ab_summary.json)。
+
+下一步：MPP 硬解 + NV12→RGA 合成，以及三核调度对照。

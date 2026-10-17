@@ -1,0 +1,25 @@
+{
+  "title": "preprocess A/B on RK3588S",
+  "board": "Orange Pi 5 / RK3588S",
+  "runtime": "librknnrt 2.3.2",
+  "input": "1920x1080 RGB",
+  "model_input": "640x640 NHWC uint8",
+  "loops": 200,
+  "primary": {
+    "A": "cpu_letterbox_bilinear + memcpy -> rknn_create_mem virt",
+    "B": "memset_pad + RGA improcess -> rknn_create_mem fd (set_io_mem once)",
+    "A_preprocess_ms": { "p50": 25.46, "p99": 25.99, "mean": 25.73 },
+    "B_preprocess_ms": { "p50": 5.26, "p99": 9.44, "mean": 5.55 },
+    "speedup_p50": 4.84,
+    "input_mem_fd": 7,
+    "cls_max_last": 0.868
+  },
+  "reference": {
+    "note": "同图 OpenCV letterbox 微基准（cache 热）仅作参考，不与 B 混为同一进程对照",
+    "A_opencv_letterbox_memcpy_ms": { "p50": 5.73, "p99": 6.37, "mean": 5.38 }
+  },
+  "infer_ms": {
+    "after_A": { "p50": 38.23, "p99": 45.13 },
+    "after_B": { "p50": 33.45, "p99": 52.16 }
+  }
+}
