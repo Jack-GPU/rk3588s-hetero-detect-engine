@@ -73,7 +73,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--duration", type=int, default=120, help="采样秒数")
     ap.add_argument("--interval", type=float, default=1.0)
-    ap.add_argument("--out", default="bench/logs/soak_power.json")
+    ap.add_argument("--out", default="bench/logs/soak_power_summary.json")
     ap.add_argument("--idle", action="store_true", help="只采样，不跑 workload")
     ap.add_argument(
         "--cmd",

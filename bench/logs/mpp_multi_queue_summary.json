@@ -236,6 +236,5 @@
     "e2e_p99_static_ms": 78.122,
     "input_demand_fps": 120,
     "note": "4×30fps 输入需求 120；AUTO 完成约 55 fps，靠丢旧帧把 e2e P99 压在 ~70 ms"
-  },
-  "raw": "mpp_multi_queue_raw.json"
+  }
 }
