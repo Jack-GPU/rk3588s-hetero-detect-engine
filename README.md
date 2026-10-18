@@ -1,6 +1,6 @@
-# RK3588S 端侧多路视频实时结构化系统
+# RK3588S 异构计算视频检测加速引擎
 
-在 RK3588S 上跑通多路 1080p 实时检测：MPP 硬解 → RGA 缩放/色域转换 → RKNN 推理，全链路用 DMA-BUF 传 fd，CPU 不碰像素。
+在 RK3588S 上构建多路 1080p 检测加速流水线：MPP 硬解 → RGA 缩放/色域转换 → RKNN 推理，全链路用 DMA-BUF 传 fd，并完成三核调度与有界队列丢帧实测。
 
 计划中的验收线（有实测再写进简历）：端到端 P99、CPU、整板功耗、热稳定。阶段划分见 [docs/实施计划.md](docs/实施计划.md)。算法上手（预训练 → ONNX → 混合 INT8 RKNN → 板上出框）见 [docs/算法上手.md](docs/算法上手.md)。
 
@@ -22,7 +22,7 @@
 
 ## 快速开始（PC）
 
-需要 Docker。没有镜像时，`./scripts/dev.sh` 会构建 `rk3588s-video-struct:2.3.2`（含 Toolkit2 2.3.2、PyTorch、Ultralytics）。有 NVIDIA Container Runtime 时自动加 GPU。
+需要 Docker。没有镜像时，`./scripts/dev.sh` 会构建 `rk3588s-hetero-detect-engine:2.3.2`（含 Toolkit2 2.3.2、PyTorch、Ultralytics）。有 NVIDIA Container Runtime 时自动加 GPU。
 
 ```bash
 ./scripts/dev.sh                              # 进入容器，仓库挂到 /workspace

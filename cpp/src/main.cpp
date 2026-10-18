@@ -6,7 +6,7 @@ int main(int argc, char** argv) {
   (void)argc;
   (void)argv;
   std::printf(
-      "rk3588s-video-struct board entry\n"
+      "rk3588s-hetero-detect-engine board entry\n"
       "\n"
       "Bench binaries (build on board with matching scripts):\n"
       "  cpp/mpp_rga_rknn_bench     single-stream MPP→RGA→RKNN→NMS\n"

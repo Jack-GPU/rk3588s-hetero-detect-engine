@@ -1,10 +1,10 @@
-# 本项目镜像 rk3588s-video-struct:2.3.2，容器名 rk3588s-video-struct。
+# 本项目镜像 rk3588s-hetero-detect-engine:2.3.2，容器名同名。
 # 镜像缺失时由 scripts/dev.sh 用 Dockerfile 构建。
-name: rk3588s-video-struct
+name: rk3588s-hetero-detect-engine
 services:
   dev:
-    image: rk3588s-video-struct:2.3.2
-    container_name: rk3588s-video-struct
+    image: rk3588s-hetero-detect-engine:2.3.2
+    container_name: rk3588s-hetero-detect-engine
     entrypoint: ["/workspace/docker/entrypoint.sh"]
     command: sleep infinity
     working_dir: /workspace

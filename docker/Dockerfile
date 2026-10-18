@@ -1,4 +1,4 @@
-# 从零构建本项目镜像，标签：rk3588s-video-struct:2.3.2
+# 从零构建本项目镜像，标签：rk3588s-hetero-detect-engine:2.3.2
 # 范围内的组件：RKNN Toolkit2 2.3.2、PyTorch CUDA 11.8/12.1 训练、Ultralytics、ONNX、aarch64 交叉编译。
 # 板端 rknnrt / MPP / RGA 不在此镜像内。
 FROM ubuntu:22.04

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# 启动并进入本项目容器 rk3588s-video-struct。
+# 启动并进入本项目容器 rk3588s-hetero-detect-engine。
 # 无参数时打开 bash；有参数时在容器内执行。
 # 例：./scripts/dev.sh python python/check_env.py
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "${ROOT}/docker"
-IMAGE="rk3588s-video-struct:2.3.2"
+IMAGE="rk3588s-hetero-detect-engine:2.3.2"
 
 if ! docker info >/dev/null 2>&1; then
   echo "Docker 守护进程不可用。请先安装并启动 Docker Engine：" >&2
